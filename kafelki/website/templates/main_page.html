@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tile Master</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/main.css"/>
+</head>
+
+<body>
+<div class="extra-background text-light">
+    <div class="container mt-5">
+        <form id="my-form" class="text-center mb-2">
+            <h1>Find similar ceramic tiles</h1>
+            <label for="url-input">URL</label>
+            <input id="url-input" type="text" class="form-control" accept="application/link-format"/>
+        </form>
+        <div id="loading-circle" class="loader d-none"></div>
+        <ul id="tile-list" class="list-group text-dark">
+
+        </ul>
+    </div>
+    <script>
+        const myForm = document.getElementById('my-form');
+        const urlInput = document.getElementById('url-input');
+        const tileList = document.getElementById('tile-list');
+        const loadingCircle = document.getElementById('loading-circle');
+
+        myForm.onsubmit = function (ev) {
+            updateTiles();
+            ev.preventDefault();
+        }
+
+        function updateTiles() {
+            loadingCircle.classList.remove('d-none');
+             //LOCAL
+             // fetch('http://localhost:8080/api/tiles?tile_url=' + urlInput.value)
+            fetch('https://kafelki-297818.ew.r.appspot.com/api/tiles?tile_url=' + urlInput.value)
+                .then(res => {
+                if (res.status === 200) {
+                    res.text().then(value => {
+                        let responseData = JSON.parse(value);
+                        tileList.innerHTML = '';
+                        if (responseData === null) {
+                            pushTile({url: '', title: 'Nothing found'});
+                        } else {
+                            console.log(responseData);
+                            for (let i of responseData) {
+                                pushTile(i);
+                            }
+                        }
+                    })
+                } else {
+                    pushTile({title: "ERROR\n" + res.status})
+                }
+            }).finally(() => {
+                loadingCircle.classList.add('d-none');
+            })
+        }
+
+        function pushTile(tileObj) {
+            let img = document.createElement('img')
+            img.src = tileObj.image_url
+            img.alt = tileObj.title
+            let li = document.createElement('li');
+            li.classList.add('list-group-item');
+            let a = document.createElement('a');
+            console.log(tileObj)
+            a.textContent = tileObj.title;
+            if (tileObj.url)
+                a.href = tileObj.url;
+            li.append(img)
+            li.appendChild(a);
+            tileList.appendChild(li);
+        }
+    </script>
+</div>
+</body>
+</html>
